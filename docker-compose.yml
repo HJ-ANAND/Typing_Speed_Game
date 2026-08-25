@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: typing-speed-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: typing_user
+      POSTGRES_PASSWORD: typing_password
+      POSTGRES_DB: typing_game
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
