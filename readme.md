@@ -1,598 +1,641 @@
-# Typing Speed Game --- Deployment Guide
+# Typing Speed Game
 
-A full-stack typing speed game built with **Next.js**, **GraphQL**,
-**Prisma**, and **PostgreSQL**.
+A full-stack typing speed game built with **Next.js**, **GraphQL Yoga**, **Prisma**, **PostgreSQL**, and **JWT authentication**.
 
-## Recommended production architecture
+The application supports user authentication, timed typing games, penalties for incorrect input, game history, personal bests, and a global leaderboard.
 
-``` text
-Browser
-   |
-   v
-Vercel
-Next.js frontend
-   |
-   | GraphQL / HTTPS
-   v
-Render
-GraphQL backend
-   |
-   v
-Hosted PostgreSQL
-```
+## Live Deployment
 
-The repository contains two applications:
+- **Frontend:** Deployed on Vercel
+- **Backend / GraphQL API:** https://typing-speed-game-backend.onrender.com
+- **GraphQL endpoint:** https://typing-speed-game-backend.onrender.com/graphql
+- **Database:** Neon PostgreSQL
 
-``` text
+> The frontend deployment URL is managed by Vercel and may vary depending on the deployment/project settings.
+
+---
+
+## Features
+
+### Authentication
+- User registration and login
+- JWT-based authentication
+- Protected application routes
+- Logout functionality
+- Password hashing
+
+### Typing Game
+- Generates exactly **20 random alphabets**
+- One character is presented at a time
+- Correct input advances the game
+- Incorrect input does not advance the current character
+- Tracks correct and incorrect characters
+- Tracks completion time
+- Applies penalty time for incorrect attempts
+
+### Dashboard
+- Personal best completion time
+- Accuracy information
+- Penalty statistics
+- Game history
+- Quick access to start a new game
+
+### Leaderboard
+- Global rankings
+- Best completion time per player
+- Accuracy statistics
+- Penalty statistics
+- Supports multiple users and their results
+
+---
+
+## Tech Stack
+
+### Frontend
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- GraphQL client
+- Next.js App Router
+
+### Backend
+- Node.js
+- Bun
+- TypeScript
+- GraphQL Yoga
+- Prisma ORM
+- PostgreSQL
+- JWT
+- Password hashing
+
+### Production Infrastructure
+- **Vercel** — Next.js frontend
+- **Render** — GraphQL backend
+- **Neon** — PostgreSQL database
+- **GitHub** — source control and deployment integration
+
+---
+
+## Project Structure
+
+```text
 typing_speed_game/
-├── frontend/     # Next.js frontend
-└── backend/      # GraphQL API + Prisma
+├── frontend/                 # Next.js application
+│   ├── app/
+│   ├── public/
+│   ├── .env.example
+│   └── package.json
+│
+├── backend/                  # GraphQL API
+│   ├── prisma/
+│   │   ├── migrations/
+│   │   └── schema.prisma
+│   ├── src/
+│   │   ├── auth/
+│   │   ├── config/
+│   │   ├── db/
+│   │   ├── game/
+│   │   ├── graphql/
+│   │   └── middleware/
+│   ├── .env.example
+│   └── package.json
+│
+└── README.md
 ```
 
-------------------------------------------------------------------------
+---
 
-## 1. Pre-deployment checklist
+# Local Development
 
-Before deploying, verify:
+## Prerequisites
 
--   Authentication works: register, login, logout.
--   Protected routes redirect unauthenticated users.
--   The game generates exactly 20 random alphabets.
--   A wrong key does not advance the current letter.
--   A correct key advances to the next letter.
--   Timer, wrong attempts, and penalty time work.
--   Completed games are saved through Prisma.
--   Game history works.
--   Personal best works.
--   Leaderboard works.
--   Test users/data that should not be public have been removed.
--   `.env` files and secrets are not committed.
--   There are no hardcoded `localhost` API URLs in production code.
+Install:
 
-Run your project checks locally using the scripts defined by your
-`package.json` files. For example:
+- Node.js
+- Bun
+- Git
+- PostgreSQL, or use a hosted PostgreSQL database such as Neon
 
-``` bash
+---
+
+## 1. Clone the repository
+
+```bash
+git clone https://github.com/HJ-ANAND/Typing_Speed_Game.git
+cd Typing_Speed_Game
+```
+
+---
+
+## 2. Configure the backend
+
+Go to the backend:
+
+```bash
+cd backend
+```
+
+Create your local environment file from the example:
+
+```bash
+cp .env.example .env
+```
+
+Configure the required backend variables:
+
+```env
+DATABASE_URL=your-postgresql-connection-string
+JWT_SECRET=your-local-jwt-secret
+```
+
+Use your own local/development database and secret.
+
+---
+
+## 3. Install backend dependencies
+
+```bash
+bun install
+```
+
+Generate the Prisma client:
+
+```bash
+bunx prisma generate
+```
+
+Apply development migrations:
+
+```bash
+bunx prisma migrate dev
+```
+
+Start the backend:
+
+```bash
+bun run dev
+```
+
+The local GraphQL API runs on:
+
+```text
+http://localhost:4000/graphql
+```
+
+---
+
+## 4. Configure the frontend
+
+Open another terminal:
+
+```bash
 cd frontend
-bun run lint
-bunx tsc --noEmit
-
-cd ../backend
-bunx tsc --noEmit
 ```
 
-------------------------------------------------------------------------
+Install dependencies:
 
-## 2. Push the project to GitHub
-
-From the project root:
-
-``` bash
-git status
-git add .
-git commit -m "Prepare project for deployment"
-git push origin main
+```bash
+bun install
 ```
 
-Make sure `.gitignore` excludes secret files such as:
+Create the local environment file:
 
-``` text
-.env
-.env.local
-.env.production
+```bash
+cp .env.example .env.local
 ```
 
-Never commit values such as:
+Set the GraphQL API URL:
 
-``` text
+```env
+NEXT_PUBLIC_GRAPHQL_URL=http://localhost:4000/graphql
+```
+
+Start the frontend:
+
+```bash
+bun run dev
+```
+
+The application will be available at:
+
+```text
+http://localhost:3000
+```
+
+---
+
+# Environment Variables
+
+## Backend
+
+The backend uses private environment variables such as:
+
+```env
 DATABASE_URL=...
 JWT_SECRET=...
 ```
 
-------------------------------------------------------------------------
+These values must **never** be committed to GitHub.
 
-# 3. Create a production PostgreSQL database
+## Frontend
 
-Create a hosted PostgreSQL database using a provider such as:
+The frontend uses:
 
--   Neon
--   Supabase
--   Render PostgreSQL
--   Railway PostgreSQL
-
-Copy the production connection string. It will look approximately like:
-
-``` text
-postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=require
+```env
+NEXT_PUBLIC_GRAPHQL_URL=...
 ```
 
-Keep this value private.
+For local development:
 
-**Do not deploy your local development database.**
-
-------------------------------------------------------------------------
-
-# 4. Prepare Prisma
-
-Your migration history must be committed:
-
-``` text
-backend/
-└── prisma/
-    ├── schema.prisma
-    └── migrations/
+```env
+NEXT_PUBLIC_GRAPHQL_URL=http://localhost:4000/graphql
 ```
 
-Development uses:
+For production:
 
-``` bash
+```env
+NEXT_PUBLIC_GRAPHQL_URL=https://typing-speed-game-backend.onrender.com/graphql
+```
+
+Only values intended to be available in browser-side code should use the `NEXT_PUBLIC_` prefix.
+
+---
+
+# Database & Prisma
+
+The project uses Prisma migrations to manage the PostgreSQL schema.
+
+Migration files are committed to the repository:
+
+```text
+backend/prisma/migrations/
+```
+
+### Development
+
+Use:
+
+```bash
 bunx prisma migrate dev
 ```
 
-Production uses:
+### Production
 
-``` bash
+Use:
+
+```bash
 bunx prisma migrate deploy
 ```
 
 Do **not** use `prisma migrate dev` against the production database.
 
-------------------------------------------------------------------------
+The production database is hosted on **Neon PostgreSQL**.
 
-# 5. Deploy the backend
+---
 
-Recommended platform: **Render**.
+# Production Deployment
 
-Create a new Web Service and connect the GitHub repository.
+The production architecture is:
 
-Because this is a monorepo, set:
+```text
+                         Browser
+                            |
+                            v
+                    +---------------+
+                    |    Vercel     |
+                    | Next.js App   |
+                    +-------+-------+
+                            |
+                       GraphQL/HTTPS
+                            |
+                            v
+                    +---------------+
+                    |    Render     |
+                    | GraphQL API   |
+                    | JWT + Prisma  |
+                    +-------+-------+
+                            |
+                            v
+                    +---------------+
+                    |     Neon      |
+                    |  PostgreSQL   |
+                    +---------------+
+```
 
-``` text
+## Backend — Render
+
+The backend is deployed as a Render Web Service.
+
+Configuration:
+
+```text
 Root Directory: backend
 ```
 
-Use the production install/build/start commands appropriate for your
-existing `package.json`.
+The backend requires production environment variables in Render:
 
-A typical Bun/Prisma deployment sequence is:
+```text
+DATABASE_URL
+JWT_SECRET
+```
 
-``` bash
-bun install
-bunx prisma generate
+The backend listens on the hosting provider's `PORT` environment variable and falls back to port `4000` for local development.
+
+The production GraphQL API is:
+
+```text
+https://typing-speed-game-backend.onrender.com/graphql
+```
+
+### Production build
+
+The backend build generates the Prisma client and compiles the TypeScript source into `dist/`.
+
+The production server starts from:
+
+```text
+dist/src/server.js
+```
+
+Prisma migrations should be applied with:
+
+```bash
 bunx prisma migrate deploy
 ```
 
-Your actual start command should be the production command already
-defined by your backend. For example, if your project uses the server
-entry directly:
+---
 
-``` bash
-bun run src/server.ts
-```
+## Frontend — Vercel
 
-## Backend environment variables
+The frontend is deployed to Vercel.
 
-In Render, add the variables required by your backend configuration.
+Because this is a monorepo, the Vercel project uses:
 
-At minimum, this commonly includes:
-
-``` text
-DATABASE_URL=your-production-postgresql-url
-JWT_SECRET=your-production-secret
-```
-
-Also add any other variables your existing backend configuration
-requires.
-
-Do not put secrets in source code.
-
-------------------------------------------------------------------------
-
-# 6. Backend production port
-
-Your backend must listen on the port provided by the hosting platform.
-
-Prefer something equivalent to:
-
-``` ts
-const port = Number(process.env.PORT) || 4000;
-```
-
-This allows:
-
-``` text
-Local development -> 4000
-Production        -> provider-assigned PORT
-```
-
-If the server currently hardcodes port `4000`, change that before
-deployment.
-
-------------------------------------------------------------------------
-
-# 7. Test the deployed backend
-
-After Render deploys, you will receive a URL similar to:
-
-``` text
-https://your-backend-name.onrender.com
-```
-
-Your GraphQL endpoint should be similar to:
-
-``` text
-https://your-backend-name.onrender.com/graphql
-```
-
-Test the endpoint with your GraphQL client.
-
-For example:
-
-``` graphql
-query {
-  health
-}
-```
-
-Then test authentication and game queries/mutations against the
-production database.
-
-------------------------------------------------------------------------
-
-# 8. Configure the frontend GraphQL URL
-
-Your local frontend currently uses a localhost backend URL. Production
-must use the deployed backend.
-
-For example:
-
-``` text
-Local:
-http://localhost:4000/graphql
-
-Production:
-https://your-backend-name.onrender.com/graphql
-```
-
-Find the GraphQL client configuration in the frontend and use an
-environment variable instead of hardcoding the production URL.
-
-For example:
-
-``` env
-NEXT_PUBLIC_GRAPHQL_URL=https://your-backend-name.onrender.com/graphql
-```
-
-Use the exact variable name already expected by your code.
-
-Only values intentionally exposed to browser-side Next.js code should
-use `NEXT_PUBLIC_`. Never expose secrets such as `JWT_SECRET` to the
-browser.
-
-------------------------------------------------------------------------
-
-# 9. Deploy the frontend
-
-Recommended platform: **Vercel**.
-
-Import the GitHub repository into Vercel.
-
-Because the repository contains both applications, set:
-
-``` text
+```text
 Root Directory: frontend
 ```
 
-Vercel should detect Next.js automatically.
+Vercel automatically detects the Next.js application.
 
-Add the frontend environment variable:
+Set the following production environment variable in Vercel:
 
-``` text
-NEXT_PUBLIC_GRAPHQL_URL=https://your-backend-name.onrender.com/graphql
+```text
+NEXT_PUBLIC_GRAPHQL_URL=https://typing-speed-game-backend.onrender.com/graphql
 ```
 
-Use the exact variable name expected by your project.
+Do not upload or commit your local `.env` or `.env.local` files.
 
-Deploy the application.
+---
 
-You should receive a URL similar to:
+# Deployment Checklist
 
-``` text
-https://typing-speed-game.vercel.app
-```
+Before considering a deployment complete, verify the following.
 
-------------------------------------------------------------------------
+### Backend
 
-# 10. Configure CORS
+- [x] Render service is running
+- [x] Production database is connected
+- [x] Prisma migrations are applied
+- [x] GraphQL endpoint is available
+- [x] JWT secret is configured through environment variables
+- [x] Backend uses the provider-assigned `PORT`
 
-The deployed frontend and backend have different origins.
+### Frontend
 
-For example:
+- [x] Vercel deployment succeeds
+- [x] Production GraphQL URL is configured
+- [x] Frontend can communicate with the Render backend
+- [x] Authentication works
+- [x] Game works
+- [x] Game results are saved
 
-``` text
-Frontend:
-https://typing-speed-game.vercel.app
+### Application
 
-Backend:
-https://typing-speed-game-api.onrender.com
-```
+- [x] Registration works
+- [x] Login works
+- [x] Logout works
+- [x] Protected routes work
+- [x] Typing game generates 20 characters
+- [x] Correct characters advance the game
+- [x] Wrong characters do not advance the game
+- [x] Wrong attempts are tracked
+- [x] Penalty time is tracked
+- [x] Completion time is recorded
+- [x] Game history updates after a completed game
+- [x] Personal best updates correctly
+- [x] Leaderboard updates correctly
+- [x] Multiple users can use the application
 
-Configure the backend CORS settings to allow the production frontend
-origin.
+---
 
-You may also keep your local development origin:
+# Production Testing
 
-``` text
-http://localhost:3000
-```
-
-Avoid using a completely open `*` CORS policy for an authenticated
-production application.
-
-------------------------------------------------------------------------
-
-# 11. Production JWT configuration
-
-The backend must use a strong production JWT secret.
-
-Example:
-
-``` text
-JWT_SECRET=<long-random-production-secret>
-```
-
-Do not:
-
--   commit it to GitHub
--   put it in frontend code
--   use a weak development secret
-
-After deployment, test:
-
-1.  Register.
-2.  Login.
-3.  Refresh.
-4.  Open the game.
-5.  Complete a game.
-6.  Open dashboard.
-7.  Open leaderboard.
-8.  Logout.
-9.  Try opening a protected page again.
-
-------------------------------------------------------------------------
-
-# 12. Production Prisma migrations
-
-Production migrations should be applied with:
-
-``` bash
-bunx prisma migrate deploy
-```
-
-Prefer running this during the backend deployment/release process.
-
-Do not change your local `.env` to point at production just to run
-migrations unless you have a specific reason and understand the risk.
-
-Make sure the migration directory is committed:
-
-``` text
-backend/prisma/migrations/
-```
-
-------------------------------------------------------------------------
-
-# 13. Final production test
+After deployment, test the complete user flow from the live frontend.
 
 ## Authentication
 
--   [ ] Register
--   [ ] Login
--   [ ] Invalid password
--   [ ] Logout
--   [ ] Protected route without authentication
--   [ ] Refresh while logged in
+1. Register a new user.
+2. Log in.
+3. Refresh the page.
+4. Navigate between protected pages.
+5. Log out.
+6. Confirm protected pages require authentication.
 
-## Typing game
+## Game
 
--   [ ] Exactly 20 letters are generated
--   [ ] One letter is displayed at a time
--   [ ] Correct key advances
--   [ ] Wrong key does not advance
--   [ ] Wrong attempts increase
--   [ ] Penalty increases
--   [ ] Timer works
--   [ ] Game finishes after 20 correct letters
--   [ ] Result is displayed
--   [ ] Result is saved
+1. Start a game.
+2. Enter correct characters.
+3. Enter incorrect characters.
+4. Confirm incorrect input does not advance the game.
+5. Complete all 20 characters.
+6. Confirm the final result is displayed.
 
-## Dashboard
+## History & Personal Best
 
--   [ ] User information appears
--   [ ] Personal best appears
--   [ ] Game history appears
--   [ ] Newly completed game appears
--   [ ] Start Game button works
+After completing a game:
+
+1. Open the dashboard.
+2. Confirm the new result appears in game history.
+3. Confirm the personal best is updated when appropriate.
+4. Complete another game and verify history changes.
 
 ## Leaderboard
 
--   [ ] Multiple users appear
--   [ ] Ranking is correct
--   [ ] Completion times are correct
--   [ ] Statistics are correct
--   [ ] Empty state works
--   [ ] Unauthenticated access is protected
+Create multiple accounts and complete games.
 
-## Multi-user test
+Verify that:
 
-Create two or more accounts and complete games with each.
-
-Verify:
-
-``` text
+```text
 User A -> sees User A's history
 User B -> sees User B's history
-Leaderboard -> sees both users
+Leaderboard -> contains both users
 ```
 
-------------------------------------------------------------------------
+Verify that rankings and statistics update after new games are completed.
 
-# 14. Common deployment problems
+---
 
-### `localhost:4000` appears in production
+# Security Notes
 
-Search the frontend:
+Never commit:
 
-``` bash
-grep -R "localhost:4000" frontend/
+```text
+.env
+.env.local
+.env.production
 ```
 
-Replace hardcoded API URLs with the production environment variable.
+Never commit secrets such as:
 
-### CORS error
+```text
+DATABASE_URL=...
+JWT_SECRET=...
+```
 
-Check:
+Production secrets should be stored in the environment-variable settings of Render/Vercel.
 
-1.  Backend CORS configuration.
-2.  Exact Vercel production URL.
-3.  Allowed origins.
-4.  Backend redeployment after changing CORS.
+The frontend must never receive private backend secrets such as:
 
-### Prisma cannot connect
-
-Check:
-
-``` text
+```text
 DATABASE_URL
+JWT_SECRET
 ```
 
-Make sure it points to the production PostgreSQL database.
+---
 
-### Prisma tables do not exist
+# Useful Commands
 
-Run:
+## Frontend
 
-``` bash
+```bash
+cd frontend
+
+bun run dev
+bun run lint
+bunx tsc --noEmit
+```
+
+## Backend
+
+```bash
+cd backend
+
+bun run dev
+bun run build
+bun run start
+bunx tsc --noEmit
+```
+
+## Prisma
+
+```bash
+cd backend
+
+bunx prisma generate
+bunx prisma migrate dev
 bunx prisma migrate deploy
 ```
 
-### Frontend shows a network/API error
+---
 
-Check the frontend GraphQL environment variable:
+# Troubleshooting
 
-``` text
-NEXT_PUBLIC_GRAPHQL_URL
-```
-
-Then verify that:
-
-``` text
-https://your-backend-url/graphql
-```
-
-is reachable.
-
-After changing a Vercel environment variable, redeploy the frontend.
-
-### Backend works locally but fails on Render
+### Frontend cannot connect to the backend
 
 Check:
 
--   `PORT`
--   production start command
--   environment variables
--   Prisma Client generation
--   Prisma migrations
--   runtime/version configuration
--   Render deployment logs
-
-------------------------------------------------------------------------
-
-# 15. Deployment order
-
-Follow this order:
-
-``` text
-1. Run local checks
-        |
-2. Push to GitHub
-        |
-3. Create production PostgreSQL
-        |
-4. Configure backend environment variables
-        |
-5. Deploy backend
-        |
-6. Apply Prisma migrations
-        |
-7. Test /graphql
-        |
-8. Configure frontend GraphQL URL
-        |
-9. Deploy frontend
-        |
-10. Configure backend CORS
-        |
-11. Test frontend
-        |
-12. Test authentication
-        |
-13. Test game
-        |
-14. Test history / best score
-        |
-15. Test leaderboard
+```text
+NEXT_PUBLIC_GRAPHQL_URL
 ```
 
-------------------------------------------------------------------------
+For production it should point to:
 
-# 16. Official deployment references
-
--   Vercel --- Next.js deployment:
-    https://vercel.com/docs/frameworks/full-stack/nextjs
--   Vercel --- Git deployments: https://vercel.com/docs/git
--   Vercel --- Environment variables:
-    https://vercel.com/docs/environment-variables
--   Render --- Node deployment:
-    https://render.com/docs/deploy-node-express-app
--   Render --- Environment variables:
-    https://render.com/docs/configure-environment-variables
--   Prisma --- Production migrations:
-    https://docs.prisma.io/docs/cli/migrate/deploy
--   Prisma --- Development vs production migrations:
-    https://docs.prisma.io/docs/orm/v6/prisma-migrate/workflows/development-and-production
-
-------------------------------------------------------------------------
-
-## Final production architecture
-
-``` text
-                     +---------------------+
-                     |       Browser       |
-                     +----------+----------+
-                                |
-                                v
-                     +---------------------+
-                     |       Vercel        |
-                     |   Next.js frontend  |
-                     +----------+----------+
-                                |
-                         GraphQL / HTTPS
-                                |
-                                v
-                     +---------------------+
-                     |       Render        |
-                     |   GraphQL backend   |
-                     |   JWT + Prisma      |
-                     +----------+----------+
-                                |
-                                v
-                     +---------------------+
-                     | PostgreSQL Database |
-                     |   Production data   |
-                     +---------------------+
+```text
+https://typing-speed-game-backend.onrender.com/graphql
 ```
 
-The finished deployment should allow a new user to register, log in,
-play the typing game, save their result, view their history and personal
-best, and appear on the global leaderboard.
+After changing a Vercel environment variable, redeploy the frontend.
+
+### CORS error
+
+Check the backend CORS configuration and make sure the production Vercel origin is allowed.
+
+Keep the local development origin available when needed:
+
+```text
+http://localhost:3000
+```
+
+### Prisma cannot connect
+
+Check the Render:
+
+```text
+DATABASE_URL
+```
+
+Make sure it points to the production Neon PostgreSQL database.
+
+### Prisma tables are missing
+
+Run the production migration command:
+
+```bash
+bunx prisma migrate deploy
+```
+
+### Backend fails to start on Render
+
+Check:
+
+- Render deployment logs
+- `PORT`
+- `DATABASE_URL`
+- `JWT_SECRET`
+- Prisma client generation
+- Prisma migrations
+- backend build output
+- production start command
+
+---
+
+# Repository
+
+GitHub:
+
+https://github.com/HJ-ANAND/Typing_Speed_Game
+
+---
+
+## Final Architecture
+
+```text
+                         +------------------+
+                         |     Browser      |
+                         +--------+---------+
+                                  |
+                                  v
+                         +------------------+
+                         |      Vercel      |
+                         |  Next.js + React |
+                         +--------+---------+
+                                  |
+                           GraphQL / HTTPS
+                                  |
+                                  v
+                         +------------------+
+                         |      Render      |
+                         |  GraphQL Yoga    |
+                         |      + JWT       |
+                         |     + Prisma     |
+                         +--------+---------+
+                                  |
+                                  v
+                         +------------------+
+                         |       Neon       |
+                         |    PostgreSQL    |
+                         +------------------+
+```
+
+The deployed application provides a complete flow from registration and authentication through gameplay, result persistence, personal history, personal bests, and global leaderboard rankings.
