@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 const jwtSecret = process.env.JWT_SECRET;
 const databaseUrl = process.env.DATABASE_URL;
 
