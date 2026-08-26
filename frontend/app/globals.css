@@ -1337,3 +1337,10 @@ html, body {
     display: none;
   }
 }
+
+/* Hide Next.js Development Badge / Portal */
+nextjs-portal,
+div[class*="nextjs-portal"],
+[data-nextjs-toast] {
+  display: none !important;
+}

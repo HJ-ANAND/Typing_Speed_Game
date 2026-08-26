@@ -6,7 +6,10 @@ import { authenticateRequest } from "./middleware/auth.js";
 
 const yoga = createYoga({
   schema,
-
+  cors: {
+    origin: process.env.CORS_ORIGIN || "*",
+    credentials: true,
+  },
   context: async ({ request }) => {
     const auth = await authenticateRequest(request);
 
@@ -17,7 +20,8 @@ const yoga = createYoga({
 });
 
 const server = createServer(yoga);
+const PORT = process.env.PORT || 4000;
 
-server.listen(4000, () => {
-  console.info("Server is running on http://localhost:4000/graphql");
+server.listen(PORT, () => {
+  console.info(`Server is running on http://localhost:${PORT}/graphql`);
 });
