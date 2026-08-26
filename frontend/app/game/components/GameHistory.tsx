@@ -13,17 +13,27 @@ type GameHistoryProps = {
 
 export function GameHistory({ history }: GameHistoryProps) {
   return (
-    <section>
-      <h2>Game history</h2>
+    <section className="card side-card game-history-card">
+      <div className="side-card-header">
+        <span className="card-badge-icon">⏳</span>
+        <h3 className="side-card-title">Recent History</h3>
+      </div>
 
       {history.length === 0 ? (
-        <p className="muted">No completed games yet.</p>
+        <div className="empty-state-box">
+          <p className="muted">No completed games yet.</p>
+        </div>
       ) : (
         <ul className="history-list">
-          {history.map((game) => (
-            <li className="history-row" key={game.id}>
-              <span>{game.correctCharacters} correct · {game.wrongAttempts} wrong</span>
-              <strong>{game.completionTime.toFixed(2)}s</strong>
+          {history.map((game, index) => (
+            <li className="history-item-row" key={game.id || index}>
+              <div className="history-item-meta">
+                <span className="history-run-tag">Run #{history.length - index}</span>
+                <span className="history-item-sub">
+                  {game.correctCharacters} correct · {game.wrongAttempts} wrong
+                </span>
+              </div>
+              <span className="history-item-time">{game.completionTime.toFixed(2)}s</span>
             </li>
           ))}
         </ul>

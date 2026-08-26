@@ -11,16 +11,36 @@ type BestScoreProps = {
 
 export function BestScore({ score }: BestScoreProps) {
   return (
-    <section>
-      <h2>Personal best</h2>
+    <section className="card side-card best-score-card">
+      <div className="side-card-header">
+        <span className="card-badge-icon">👑</span>
+        <h3 className="side-card-title">Personal Best</h3>
+      </div>
 
       {!score ? (
-        <p className="muted">No score yet. Your first run starts the record.</p>
+        <div className="empty-state-box">
+          <p className="muted">No score yet. Complete your first run to set a record!</p>
+        </div>
       ) : (
-        <div className="history-list">
-          <div className="history-row"><span>Completion</span><strong>{score.completionTime.toFixed(2)}s</strong></div>
-          <div className="history-row"><span>Accuracy</span><strong>{score.correctCharacters} correct</strong></div>
-          <div className="history-row"><span>Penalty</span><strong>{score.penaltyTime.toFixed(2)}s</strong></div>
+        <div className="pb-stats-group">
+          <div className="pb-hero-time">
+            <span className="pb-label">RECORD TIME</span>
+            <span className="pb-value">{score.completionTime.toFixed(2)}s</span>
+          </div>
+          <div className="pb-details-row">
+            <div className="pb-detail-item">
+              <span className="detail-name">Correct</span>
+              <span className="detail-val">{score.correctCharacters}</span>
+            </div>
+            <div className="pb-detail-item">
+              <span className="detail-name">Errors</span>
+              <span className="detail-val text-danger">{score.wrongAttempts}</span>
+            </div>
+            <div className="pb-detail-item">
+              <span className="detail-name">Penalty</span>
+              <span className="detail-val">+{score.penaltyTime.toFixed(2)}s</span>
+            </div>
+          </div>
         </div>
       )}
     </section>

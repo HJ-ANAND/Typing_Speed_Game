@@ -28,21 +28,31 @@ export default function LeaderboardPage() {
   return (
     <AuthGuard>
       <main className="page-container">
-        <header className="dashboard-hero">
+        <header className="page-header-banner">
           <div>
-            <p className="eyebrow">Global rankings</p>
-            <h1 className="page-heading">Leaderboard</h1>
-            <p className="page-subtitle">The cleanest, quickest runs rise to the top.</p>
+            <span className="eyebrow">Global Speed Champions</span>
+            <h1 className="page-heading">Hall of Fame</h1>
+            <p className="page-subtitle">The cleanest, quickest runs across all players worldwide.</p>
+          </div>
+          <div className="trophy-badge-banner">
+            <span>👑 Top Speed Demons</span>
           </div>
         </header>
 
         {loading ? (
-          <p className="muted">Loading leaderboard...</p>
+          <div className="card content-card loading-box">
+            <div className="spinner"></div>
+            <p className="muted">Fetching global rankings...</p>
+          </div>
         ) : error ? (
-          <p className="form-error">{error}</p>
+          <div className="card content-card">
+            <p className="form-error">{error}</p>
+          </div>
         ) : leaderboard.length === 0 ? (
-          <section className="card content-card">
-            <p className="empty-state">No scores yet. Be the first to set the pace.</p>
+          <section className="card content-card empty-leaderboard-hero">
+            <div className="empty-trophy-icon">🏆</div>
+            <h3>No Scores Logged Yet</h3>
+            <p className="empty-state">Be the first legend to complete a speed run and claim the #1 spot!</p>
           </section>
         ) : (
           <section className="card leaderboard-card">
@@ -51,21 +61,40 @@ export default function LeaderboardPage() {
                 <tr>
                   <th>Rank</th>
                   <th>Player</th>
-                  <th>Best time</th>
-                  <th>Accuracy</th>
-                  <th>Penalties</th>
+                  <th>Best Time</th>
+                  <th>Correct Keys</th>
+                  <th>Errors</th>
                 </tr>
               </thead>
               <tbody>
-                {leaderboard.map((entry, index) => (
-                  <tr key={entry.userId}>
-                    <td className={"rank " + (index < 3 ? "rank-top" : "")}>#{index + 1}</td>
-                    <td className="player-name">{entry.name}</td>
-                    <td className="score-time">{entry.completionTime.toFixed(2)}s</td>
-                    <td>{entry.correctCharacters} correct</td>
-                    <td>{entry.wrongAttempts} wrong</td>
-                  </tr>
-                ))}
+                {leaderboard.map((entry, index) => {
+                  const rankMedal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`;
+                  const initial = entry.name ? entry.name.charAt(0).toUpperCase() : "P";
+                  return (
+                    <tr key={entry.userId} className={index < 3 ? `top-rank-row rank-${index + 1}` : ""}>
+                      <td className="rank-cell">
+                        <span className={`rank-badge ${index < 3 ? `medal-${index + 1}` : "rank-number"}`}>
+                          {rankMedal}
+                        </span>
+                      </td>
+                      <td className="player-cell">
+                        <div className="player-info">
+                          <span className="player-avatar">{initial}</span>
+                          <span className="player-name">{entry.name}</span>
+                        </div>
+                      </td>
+                      <td className="score-time-cell">
+                        <span className="score-time-pill">{entry.completionTime.toFixed(2)}s</span>
+                      </td>
+                      <td>
+                        <span className="stat-pill success">{entry.correctCharacters} correct</span>
+                      </td>
+                      <td>
+                        <span className="stat-pill danger">{entry.wrongAttempts} wrong (+{(entry.penaltyTime ?? (entry.wrongAttempts * 0.5)).toFixed(2)}s)</span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </section>
