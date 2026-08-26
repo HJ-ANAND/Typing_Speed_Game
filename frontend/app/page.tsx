@@ -48,69 +48,73 @@ export default function HomePage() {
 
   return (
     <AuthGuard>
-      <main>
-      <h1>Typing Speed Game</h1>
+      <main className="page-container">
 
       {loading ? (
-        <p>Loading...</p>
+        <p className="muted">Loading your dashboard...</p>
       ) : error ? (
-        <p>{error}</p>
+        <p className="form-error">{error}</p>
       ) : (
         <>
-          {user && (
-        <>
-          <h2>Welcome, {user.name}</h2>
-          <p>{user.email}</p>
-        </>
-      )}
+          <header className="dashboard-hero">
+            <div>
+              <p className="eyebrow">Personal dashboard</p>
+              <h1 className="page-heading">Ready for another run?</h1>
+              <p className="page-subtitle">Every keystroke gets you closer to a new personal best.</p>
+            </div>
+            {user && (
+              <div className="profile-chip">
+                <strong>{user.name}</strong>
+                <span>{user.email}</span>
+              </div>
+            )}
+          </header>
 
-      <hr />
+          <section className="metric-grid">
+            <article className="card metric-card featured">
+              <p className="metric-label">Best completion</p>
+              <p className="metric-value">{bestScore ? bestScore.completionTime.toFixed(2) + "s" : "—"}</p>
+              <p className="metric-detail">Your fastest recorded run</p>
+            </article>
+            <article className="card metric-card">
+              <p className="metric-label">Characters</p>
+              <p className="metric-value">{bestScore?.correctCharacters ?? 0}</p>
+              <p className="metric-detail">Correct in your best game</p>
+            </article>
+            <article className="card metric-card">
+              <p className="metric-label">Recent runs</p>
+              <p className="metric-value">{history.length}</p>
+              <p className="metric-detail">Games in your history</p>
+            </article>
+          </section>
 
-      <section>
-        <h2>Best Score</h2>
-
-        {bestScore ? (
-          <>
-            <p>
-              Completion time:{" "}
-              {bestScore.completionTime.toFixed(2)}s
-            </p>
-            <p>
-              Correct characters: {bestScore.correctCharacters}
-            </p>
-            <p>
-              Wrong attempts: {bestScore.wrongAttempts}
-            </p>
-            <p>
-              Penalty time: {bestScore.penaltyTime.toFixed(2)}s
-            </p>
-          </>
-        ) : (
-          <p>No games played yet.</p>
-        )}
-      </section>
-
-      <hr />
-
-      <section>
-        <h2>Recent Games</h2>
-
-        {history.length === 0 ? (
-          <p>No games played yet.</p>
-        ) : (
-          <ul>
-            {history.slice(0, 5).map((game) => (
-              <li key={game.id}>
-                {game.completionTime.toFixed(2)}s —{" "}
-                {game.correctCharacters} correct —{" "}
-                {game.wrongAttempts} wrong
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <hr />
+          <section className="dashboard-grid">
+            <article className="card content-card">
+              <div className="card-header">
+                <h2 className="section-title">Recent activity</h2>
+                <span className="muted">Last 5 games</span>
+              </div>
+              {history.length === 0 ? (
+                <p className="empty-state">No games played yet. Start a game to build your history.</p>
+              ) : (
+                <ul className="history-list">
+                  {history.slice(0, 5).map((game) => (
+                    <li className="history-row" key={game.id}>
+                      <span>{game.correctCharacters} correct · {game.wrongAttempts} wrong</span>
+                      <strong>{game.completionTime.toFixed(2)}s</strong>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </article>
+            <article className="card content-card">
+              <div className="card-header">
+                <h2 className="section-title">Next challenge</h2>
+              </div>
+              <p className="page-subtitle">Keep your hands on the keyboard and aim for a clean, quick run.</p>
+              <a className="button" href="/game">Start typing →</a>
+            </article>
+          </section>
 
         </>
       )}

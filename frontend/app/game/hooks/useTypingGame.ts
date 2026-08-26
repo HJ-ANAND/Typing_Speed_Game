@@ -1,75 +1,148 @@
-"use client";
-
-import { useCallback, useEffect, useState } from "react";
-import { calculateStats, GameStats } from "../lib/game";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  calculatePenalty,
+  generateLetters,
+  TOTAL_LETTERS,
+} from "../lib/game";
 import { saveGameResult } from "../lib/game.api";
+import type {
+  GameResultData,
+  GameStatus,
+} from "../lib/types";
 
-const SAMPLE_TEXT = "The quick brown fox jumps over the lazy dog.";
+export type UseTypingGameOptions = {
+  onSaveSuccess?: () => void;
+};
 
-type GameStatus = "idle" | "running" | "finished";
+export function useTypingGame(options: UseTypingGameOptions = {}) {
+  const { onSaveSuccess } = options;
+  const onSaveSuccessRef = useRef(onSaveSuccess);
 
-export function useTypingGame() {
-  const [targetText] = useState(SAMPLE_TEXT);
-  const [typedText, setTypedText] = useState("");
+  useEffect(() => {
+    onSaveSuccessRef.current = onSaveSuccess;
+  }, [onSaveSuccess]);
 
+  const [letters, setLetters] = useState<string[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [correctCharacters, setCorrectCharacters] = useState(0);
+  const [wrongAttempts, setWrongAttempts] = useState(0);
   const [status, setStatus] = useState<GameStatus>("idle");
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [result, setResult] = useState<GameStats | null>(null);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [completionTime, setCompletionTime] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const startGame = useCallback(() => {
-    setTypedText("");
-    setElapsedTime(0);
-    setResult(null);
+    setLetters(generateLetters(TOTAL_LETTERS));
+    setCurrentIndex(0);
+    setCorrectCharacters(0);
+    setWrongAttempts(0);
+    setCompletionTime(0);
+    setStartTime(Date.now());
     setStatus("running");
+    setIsSaving(false);
+    setSaveError(null);
   }, []);
 
-  const handleTyping = useCallback(
-    async (value: string) => {
-      if (status !== "running") {
-        return;
-      }
+  useEffect(() => {
+    const frameId = window.requestAnimationFrame(startGame);
 
-      setTypedText(value);
-
-      if (value.length >= targetText.length) {
-        const stats = calculateStats(targetText, value, elapsedTime);
-
-        setResult(stats);
-        setStatus("finished");
-
-        try {
-          await saveGameResult(stats);
-        } catch (error) {
-          console.error("Failed to save game result:", error);
-        }
-      }
-    },
-    [status, targetText, elapsedTime],
-  );
+    return () => window.cancelAnimationFrame(frameId);
+  }, [startGame]);
 
   useEffect(() => {
     if (status !== "running") {
       return;
     }
 
-    const startTime = Date.now();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key.length !== 1) {
+        return;
+      }
 
-    const timer = setInterval(() => {
-      setElapsedTime((Date.now() - startTime) / 1000);
-    }, 100);
+      const pressedKey = event.key.toUpperCase();
+      const currentLetter = letters[currentIndex];
+
+      if (!currentLetter) {
+        return;
+      }
+
+      if (pressedKey === currentLetter) {
+        const newCorrectCount = correctCharacters + 1;
+
+        setCorrectCharacters(newCorrectCount);
+
+        if (currentIndex + 1 >= letters.length) {
+          const endTime = Date.now();
+          const time = (endTime - (startTime ?? endTime)) / 1000;
+          const finalPenaltyTime = calculatePenalty(wrongAttempts);
+
+          setCompletionTime(time);
+          setStatus("finished");
+          setIsSaving(true);
+          setSaveError(null);
+
+          saveGameResult({
+            completionTime: time,
+            correctCharacters: newCorrectCount,
+            wrongAttempts,
+            penaltyTime: finalPenaltyTime,
+          })
+            .then(() => {
+              setIsSaving(false);
+              onSaveSuccessRef.current?.();
+            })
+            .catch((error) => {
+              setIsSaving(false);
+              console.error("Failed to save game result:", error);
+              setSaveError("Failed to save game result.");
+            });
+        } else {
+          setCurrentIndex((index) => index + 1);
+        }
+      } else {
+        setWrongAttempts((attempts) => attempts + 1);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      clearInterval(timer);
+      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [status]);
+  }, [
+    status,
+    letters,
+    currentIndex,
+    correctCharacters,
+    wrongAttempts,
+    startTime,
+  ]);
+
+  const penaltyTime = calculatePenalty(wrongAttempts);
+
+  const result: GameResultData | null =
+    status === "finished"
+      ? {
+          completionTime,
+          correctCharacters,
+          wrongAttempts,
+          penaltyTime,
+        }
+      : null;
 
   return {
-    targetText,
-    typedText,
+    currentLetter: letters[currentIndex] ?? "",
+    currentIndex,
+    totalLetters: TOTAL_LETTERS,
+    correctCharacters,
+    wrongAttempts,
+    penaltyTime,
+    completionTime,
     status,
-    elapsedTime,
     result,
+    isSaving,
+    saveError,
     startGame,
-    handleTyping,
   };
 }

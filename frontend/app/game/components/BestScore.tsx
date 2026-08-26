@@ -12,16 +12,15 @@ type BestScoreProps = {
 export function BestScore({ score }: BestScoreProps) {
   return (
     <section>
-      <h2>Best Score</h2>
+      <h2>Personal best</h2>
 
       {!score ? (
-        <p>No score yet.</p>
+        <p className="muted">No score yet. Your first run starts the record.</p>
       ) : (
-        <div>
-          <p>Time: {score.completionTime.toFixed(2)}s</p>
-          <p>Correct: {score.correctCharacters}</p>
-          <p>Wrong: {score.wrongAttempts}</p>
-          <p>Penalty: {score.penaltyTime.toFixed(2)}s</p>
+        <div className="history-list">
+          <div className="history-row"><span>Completion</span><strong>{score.completionTime.toFixed(2)}s</strong></div>
+          <div className="history-row"><span>Accuracy</span><strong>{score.correctCharacters} correct</strong></div>
+          <div className="history-row"><span>Penalty</span><strong>{score.penaltyTime.toFixed(2)}s</strong></div>
         </div>
       )}
     </section>

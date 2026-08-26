@@ -40,7 +40,10 @@ export const queries = {
   leaderboard: async (
     _: unknown,
     { limit }: { limit?: number },
+    context: Context,
   ) => {
+    requireAuth(context);
+
     const requestedLimit = limit ?? 10;
 
     if (

@@ -17,14 +17,25 @@ export default function Navbar() {
   }
 
   return (
-    <nav>
-      <Link href="/">Dashboard</Link>
-      {" | "}
-      <Link href="/game">Game</Link>
-      {" | "}
-      <Link href="/leaderboard">Leaderboard</Link>
-      {" | "}
-      <button onClick={handleLogout}>Logout</button>
+    <nav className="navbar">
+      <Link className="brand" href="/">
+        <span className="brand-mark">⌁</span>
+        Keyflow
+      </Link>
+      <div className="nav-links">
+        <Link className={"nav-link " + (pathname === "/" ? "active" : "")} href="/">
+          Dashboard
+        </Link>
+        <Link className={"nav-link " + (pathname === "/game" ? "active" : "")} href="/game">
+          Game
+        </Link>
+        <Link className={"nav-link " + (pathname === "/leaderboard" ? "active" : "")} href="/leaderboard">
+          Leaderboard
+        </Link>
+        <button className="button button-quiet" type="button" onClick={handleLogout}>
+          Logout
+        </button>
+      </div>
     </nav>
   );
 }

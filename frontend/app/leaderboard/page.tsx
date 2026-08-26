@@ -1,19 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { getLeaderboard } from "@/app/game/lib/game.api";
+import { getLeaderboard, type LeaderboardEntry } from "@/app/game/lib/game.api";
 import AuthGuard from "@/app/components/AuthGuard";
-
-type LeaderboardEntry = {
-  userId: string;
-  name: string;
-  completionTime: number;
-  correctCharacters: number;
-  wrongAttempts: number;
-  penaltyTime: number;
-  createdAt: string;
-};
 
 export default function LeaderboardPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -38,37 +27,50 @@ export default function LeaderboardPage() {
 
   return (
     <AuthGuard>
-      <main>
-        <h1>Leaderboard</h1>
+      <main className="page-container">
+        <header className="dashboard-hero">
+          <div>
+            <p className="eyebrow">Global rankings</p>
+            <h1 className="page-heading">Leaderboard</h1>
+            <p className="page-subtitle">The cleanest, quickest runs rise to the top.</p>
+          </div>
+        </header>
 
         {loading ? (
-          <p>Loading...</p>
+          <p className="muted">Loading leaderboard...</p>
         ) : error ? (
-          <p>{error}</p>
+          <p className="form-error">{error}</p>
         ) : leaderboard.length === 0 ? (
-            <p>No scores yet.</p>
-            ) : (
-                <ol>
-            {leaderboard.map((entry) => (
-                <li key={entry.userId}>
-                <strong>{entry.name}</strong>
-                {" — "}
-                {entry.completionTime.toFixed(2)}s
-                {" — "}
-                {entry.correctCharacters} correct
-                {" — "}
-                {entry.wrongAttempts} wrong
-                </li>
-            ))}
-            </ol>
+          <section className="card content-card">
+            <p className="empty-state">No scores yet. Be the first to set the pace.</p>
+          </section>
+        ) : (
+          <section className="card leaderboard-card">
+            <table className="leaderboard-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Player</th>
+                  <th>Best time</th>
+                  <th>Accuracy</th>
+                  <th>Penalties</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leaderboard.map((entry, index) => (
+                  <tr key={entry.userId}>
+                    <td className={"rank " + (index < 3 ? "rank-top" : "")}>#{index + 1}</td>
+                    <td className="player-name">{entry.name}</td>
+                    <td className="score-time">{entry.completionTime.toFixed(2)}s</td>
+                    <td>{entry.correctCharacters} correct</td>
+                    <td>{entry.wrongAttempts} wrong</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
         )}
-
-        <hr />
-
-        <Link href="/">Back to Dashboard</Link>
-        <br />
-        <Link href="/game">Play Game</Link>
-        </main>
+      </main>
     </AuthGuard>
   );
 }

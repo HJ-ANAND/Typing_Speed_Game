@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { graphqlRequest } from "@/app/lib/graphql/client";
 
@@ -67,11 +68,18 @@ export default function LoginPage() {
   }
 
   return (
-    <main>
-      <h1>Login</h1>
+    <main className="auth-page">
+      <section className="auth-card">
+        <div className="auth-brand">
+          <span className="brand-mark">⌁</span>
+          Keyflow
+        </div>
+        <p className="eyebrow">Welcome back</p>
+        <h1>Pick up your pace.</h1>
+        <p className="auth-copy">Sign in to track your progress and beat your best time.</p>
 
-      <form onSubmit={handleSubmit}>
-        <div>
+        <form className="form-stack" onSubmit={handleSubmit}>
+          <div className="form-field">
           <label htmlFor="email">Email</label>
           <input
             id="email"
@@ -80,9 +88,9 @@ export default function LoginPage() {
             onChange={(event) => setEmail(event.target.value)}
             required
           />
-        </div>
+          </div>
 
-        <div>
+          <div className="form-field">
           <label htmlFor="password">Password</label>
           <input
             id="password"
@@ -91,20 +99,19 @@ export default function LoginPage() {
             onChange={(event) => setPassword(event.target.value)}
             required
           />
-        </div>
+          </div>
 
-        {error && <p>{error}</p>}
+          {error && <p className="form-error">{error}</p>}
 
-        <button type="submit" disabled={loading}>
+          <button className="button form-submit" type="submit" disabled={loading}>
           {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
+          </button>
+        </form>
 
-      <br />
-
-      <a href="/authentication/register">
-        Don&apos;t have an account?
-      </a>
+        <p className="auth-switch">
+          New here? <Link href="/authentication/register">Create an account</Link>
+        </p>
+      </section>
     </main>
   );
 }

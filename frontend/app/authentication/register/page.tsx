@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { graphqlRequest } from "@/app/lib/graphql/client";
 
@@ -69,11 +70,18 @@ export default function RegisterPage() {
   }
 
   return (
-    <main>
-      <h1>Register</h1>
+    <main className="auth-page">
+      <section className="auth-card">
+        <div className="auth-brand">
+          <span className="brand-mark">⌁</span>
+          Keyflow
+        </div>
+        <p className="eyebrow">Start your streak</p>
+        <h1>Type. Improve. Repeat.</h1>
+        <p className="auth-copy">Create your account to save every great run and climb the board.</p>
 
-      <form onSubmit={handleSubmit}>
-        <div>
+        <form className="form-stack" onSubmit={handleSubmit}>
+          <div className="form-field">
           <label htmlFor="name">Name</label>
           <input
             id="name"
@@ -82,9 +90,9 @@ export default function RegisterPage() {
             onChange={(event) => setName(event.target.value)}
             required
           />
-        </div>
+          </div>
 
-        <div>
+          <div className="form-field">
           <label htmlFor="email">Email</label>
           <input
             id="email"
@@ -93,9 +101,9 @@ export default function RegisterPage() {
             onChange={(event) => setEmail(event.target.value)}
             required
           />
-        </div>
+          </div>
 
-        <div>
+          <div className="form-field">
           <label htmlFor="password">Password</label>
           <input
             id="password"
@@ -104,18 +112,19 @@ export default function RegisterPage() {
             onChange={(event) => setPassword(event.target.value)}
             required
           />
-        </div>
+          </div>
 
-        {error && <p>{error}</p>}
+          {error && <p className="form-error">{error}</p>}
 
-        <button type="submit" disabled={loading}>
+          <button className="button form-submit" type="submit" disabled={loading}>
           {loading ? "Creating account..." : "Register"}
-        </button>
-      </form>
+          </button>
+        </form>
 
-      <br />
-
-      <a href="/authentication/login">Already have an account?</a>
+        <p className="auth-switch">
+          Already have an account? <Link href="/authentication/login">Log in</Link>
+        </p>
+      </section>
     </main>
   );
 }

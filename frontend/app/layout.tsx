@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Navbar from "./components/Navbar";
+import ThemeToggle from "./components/ThemeToggle";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,8 +16,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Navbar />
-        {children}
+        <div className="site-shell">
+          <Navbar />
+          <ThemeToggle />
+          {children}
+        </div>
       </body>
     </html>
   );

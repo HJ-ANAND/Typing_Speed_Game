@@ -131,7 +131,7 @@ const LEADERBOARD_QUERY = `
   }
 `;
 
-type LeaderboardEntry = {
+export type LeaderboardEntry = {
   userId: string;
   name: string;
   completionTime: number;

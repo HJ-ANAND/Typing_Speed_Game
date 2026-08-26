@@ -1,32 +1,25 @@
-export type GameStats = {
-  completionTime: number;
-  correctCharacters: number;
-  wrongAttempts: number;
-  penaltyTime: number;
-};
+import type { GameResultData } from "./types";
 
-export function calculateStats(
-  target: string,
-  typed: string,
-  elapsedTime: number
-): GameStats {
-  let correctCharacters = 0;
-  let wrongAttempts = 0;
+export const TOTAL_LETTERS = 20;
 
-  for (let i = 0; i < typed.length; i++) {
-    if (typed[i] === target[i]) {
-      correctCharacters++;
-    } else {
-      wrongAttempts++;
-    }
-  }
+export type GameStats = GameResultData;
 
-  const penaltyTime = wrongAttempts * 0.5;
+export function generateRandomLetter(): string {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-  return {
-    completionTime: elapsedTime + penaltyTime,
-    correctCharacters,
-    wrongAttempts,
-    penaltyTime,
-  };
+  return alphabet[Math.floor(Math.random() * alphabet.length)];
+}
+
+export function generateLetters(
+  count: number = TOTAL_LETTERS
+): string[] {
+  return Array.from({ length: count }, () =>
+    generateRandomLetter()
+  );
+}
+
+export function calculatePenalty(
+  wrongAttempts: number
+): number {
+  return wrongAttempts * 0.5;
 }
